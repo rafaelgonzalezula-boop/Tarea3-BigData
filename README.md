@@ -1,2 +1,50 @@
 # Tarea3-BigData
 Procesamiento de Datos con Apache Spark y Kafka - Caso SECOP Contratos Electrónicos
+# Solución de Procesamiento de Datos con Apache Spark y Kafka
+**Caso de Estudio:** SECOP - Contratos Electrónicos (Datos Abiertos de Colombia)  
+**Curso:** Big Data (UNAD)
+
+---
+
+## 📄 Descripción Clara de la Solución
+
+Este proyecto desarrolla una solución integral de Big Data enfocada en el análisis de contratos públicos de Colombia (**SECOP Contratos Electrónicos**). La arquitectura combina el procesamiento de datos masivos en lote (*batch*) y el procesamiento de eventos en tiempo real (*streaming*):
+
+1. **Procesamiento en Lote (Batch):**
+   - **Módulo:** `tarea3.py`
+   - **Tecnología:** Apache Hadoop (HDFS) y PySpark (Spark DataFrames).
+   - **Funcionalidad:** Carga el conjunto de datos masivo desde HDFS (`hdfs://localhost:9000/Tarea3/rows.csv`), realiza la limpieza de datos, analiza la estructura del esquema y ejecuta consultas analíticas y agregaciones estadísticas sobre los contratos registrados.
+
+2. **Procesamiento en Tiempo Real (Streaming):**
+   - **Módulos:** `kafka_producer.py` (Productor) y `spark_streaming_consumer.py` (Consumidor).
+   - **Tecnología:** Apache Kafka y Spark Structured Streaming.
+   - **Funcionalidad:** 
+     - El **productor** simula la generación e ingesta continua de eventos de adjudicación de contratos en formato JSON hacia el *topic* de Kafka `secop_contratos`.
+     - El **consumidor** procesa el flujo de mensajes recibidos de Kafka en ventanas temporales de 1 minuto, calculando métricas acumuladas en tiempo real (suma total del valor contratado y cantidad de contratos adjudicados por departamento).
+
+---
+
+## 🛠️ Requisitos del Sistema e Instalación
+
+Para ejecutar esta solución se requiere la siguiente infraestructura configurada:
+- **Sistema Operativo:** Ubuntu Linux (entorno virtualizado).
+- **Hadoop:** Versión 3.3.x con HDFS activo.
+- **Apache Spark:** Versión 3.5.x.
+- **Apache Kafka:** Versión 3.x.
+- **Python 3:** Con la librería `kafka-python` instalada (`pip install kafka-python`).
+
+---
+
+## 🚀 Instrucciones para la Ejecución
+
+Sigue este paso a paso para ejecutar los componentes de la solución en la máquina virtual:
+
+### Paso 1: Iniciar los servicios del Clúster (Hadoop y Kafka)
+Abre la terminal e inicia los servicios requeridos:
+```bash
+# Iniciar HDFS y YARN (usuario hadoop)
+start-all.sh
+
+# Iniciar servidor de ZooKeeper y Kafka en segundo plano (usuario vboxuser)
+sudo /opt/Kafka/bin/zookeeper-server-start.sh /opt/Kafka/config/zookeeper.properties &
+sudo /opt/Kafka/bin/kafka-server-start.sh /opt/Kafka/config/server.properties &
