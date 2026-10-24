@@ -1,0 +1,55 @@
+import logging
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import from_json, col, window
+from pyspark.sql.types import StructType, StructField, StringType, DoubleType, TimestampType
+
+# 1. Crear sesión de Spark
+spark = SparkSession.builder \
+    .appName("SECOPContratosStreaming") \
+    .config("spark.sql.shuffle.partitions", "2") \
+    .getOrCreate()
+
+spark.sparkContext.setLogLevel("WARN")
+
+# 2. Esquema de los datos JSON que vienen de Kafka
+schema = StructType([
+    StructField("id_contrato", StringType()),
+    StructField("entidad", StringType()),
+    StructField("departamento", StringType()),
+    StructField("modalidad", StringType()),
+    StructField("valor_contrato", DoubleType()),
+    StructField("timestamp", TimestampType())
+])
+
+# 3. Conexión al stream de Kafka
+df = spark.readStream \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", "localhost:9092") \
+    .option("subscribe", "secop_contratos") \
+    .load()
+
+# 4. Decodificar el mensaje JSON
+parsed_df = df.select(
+    from_json(col("value").cast("string"), schema).alias("data")
+).select("data.*")
+
+# 5. Agregación en ventanas de 1 minuto por departamento
+windowed_stats = parsed_df \
+    .groupBy(
+        window(col("timestamp"), "1 minute"),
+        "departamento"
+    ) \
+    .agg(
+        {"valor_contrato": "sum", "id_contrato": "count"}
+    ) \
+    .withColumnRenamed("sum(valor_contrato)", "total_dinero_contratado") \
+    .withColumnRenamed("count(id_contrato)", "cantidad_contratos")
+
+# 6. Salida en pantalla en tiempo real
+query = windowed_stats.writeStream \
+    .outputMode("complete") \
+    .format("console") \
+    .option("truncate", "false") \
+    .start()
+
+query.awaitTermination()

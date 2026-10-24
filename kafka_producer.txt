@@ -1,0 +1,34 @@
+import time
+import json
+import random
+from kafka import KafkaProducer
+
+# Listas de datos para simular contratos del SECOP
+DEPARTAMENTOS = ['Bogotá D.C.', 'Antioquia', 'Valle del Cauca', 'Cundinamarca', 'Atlántico', 'Santander']
+ENTIDADES = ['Alcaldía Mayor', 'Gobernación', 'Ministerio de Educación', 'INVIAS', 'SENA']
+MODALIDADES = ['Licitación Pública', 'Contratación Directa', 'Selección Abreviada', 'Mínima Cuantía']
+
+def generate_secop_data():
+    return {
+        "id_contrato": f"CO1.PCO.{random.randint(1000000, 9999999)}",
+        "entidad": random.choice(ENTIDADES),
+        "departamento": random.choice(DEPARTAMENTOS),
+        "modalidad": random.choice(MODALIDADES),
+        "valor_contrato": float(random.randint(5000000, 500000000)),
+        "timestamp": int(time.time())
+    }
+
+# Conexión al servidor local de Kafka
+producer = KafkaProducer(
+    bootstrap_servers=['localhost:9092'],
+    value_serializer=lambda x: json.dumps(x).encode('utf-8')
+)
+
+print("--- Transmitiendo eventos de SECOP a Kafka (Topic: secop_contratos) ---")
+
+while True:
+    contrato_data = generate_secop_data()
+    # Enviar mensaje al topic de Kafka
+    producer.send('secop_contratos', value=contrato_data)
+    print(f"Enviado a Kafka: {contrato_data}")
+    time.sleep(1) # Envía un evento por segundo
