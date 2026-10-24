@@ -7,7 +7,7 @@ Procesamiento de Datos con Apache Spark y Kafka - Caso SECOP Contratos Electrón
 
 ---
 
-## Descripción Clara de la Solución
+## Solución
 
 Este proyecto desarrolla una solución integral de Big Data enfocada en el análisis de contratos públicos de Colombia (**SECOP Contratos Electrónicos**). La arquitectura combina el procesamiento de datos masivos en lote (*batch*) y el procesamiento de eventos en tiempo real (*streaming*):
 
